@@ -833,6 +833,18 @@ section[id], header[id] { scroll-margin-top: 6.5rem; }
   justify-content: space-between;
 }
 .foot-brand { font-family: var(--font-head); font-weight: 800; letter-spacing: -0.03em; }
+.foot-legal {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  align-items: baseline;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+.foot-legal a { color: var(--ink-soft); text-decoration: underline; text-underline-offset: 3px; }
+.foot-legal a:hover { color: var(--moss); }
+.foot-license { font-size: 0.78rem; }
 .foot-meta { font-size: 0.68rem; letter-spacing: 0.1em; color: var(--ink-soft); }
 
 /* ============================================================
