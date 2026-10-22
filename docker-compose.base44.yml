@@ -3,7 +3,7 @@ services:
     image: python:3.11-slim
     working_dir: /app
     labels:
-      base44.project: "FastAPI Demo App"
+      base44.project: "Mitaka Work & Life LP"
       base44.kind: "web"
       base44.port: "3000"
       base44.docs: "/docs"
@@ -18,10 +18,16 @@ services:
     command:
       [
         "sh", "-ec",
-        "pip install --quiet uv && uv sync --locked --extra standard --no-dev && exec uv run uvicorn demo_app:app --host 0.0.0.0 --port 3000 --reload",
+        "pip install --quiet uv && uv sync --locked --extra standard --no-dev && exec uv run uvicorn landing.main:app --host 0.0.0.0 --port 3000 --reload --reload-dir landing",
       ]
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:3000/')"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request as u; assert all(len(u.urlopen('http://localhost:3000'+p).read())>0 for p in ('/','/css/style.css')), 'landing page or its stylesheet was not served'",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
