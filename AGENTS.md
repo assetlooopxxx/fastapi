@@ -37,9 +37,11 @@ Two things give the sandbox something to serve:
   `photo-1554118811-1e0d58224f24`, life band `photo-1523217582562-09d0def993a6`. Replace
   them with real Mitaka photography before launch; the page already labels them
   "写真はイメージです".
-- **Placeholder to replace before going live**: the LINE friend-add URL
-  `https://line.me/R/ti/p/@your_line_id` (used by the nav CTA, every plan card and the
-  Final Pulse button).
+- **Member registration form** (`#contact`): customers enter their name and LINE ID (or the
+  phone number registered with LINE). `landing/static/js/main.js` POSTs it to
+  `POST /api/register` (`landing/main.py`), which appends a JSON line to
+  `landing/data/registrations.jsonl` (git-ignored runtime data). There is no LINE friend-add
+  URL any more; all CTAs scroll to `#contact`.
 
 ## How it runs in the sandbox
 

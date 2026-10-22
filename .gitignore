@@ -31,3 +31,6 @@ archive.zip
 .DS_Store
 
 .codspeed
+
+# Member registrations collected by the landing form (runtime data)
+landing/data/

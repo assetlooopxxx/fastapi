@@ -231,8 +231,20 @@
     <div class="shell">
       <p class="sec-index mono pulse-index" data-reveal>04 — START</p>
       <h2 class="pulse-title" data-reveal style="--i:1">まずはお気軽に<br>ご相談ください。</h2>
-      <p class="pulse-lead" data-reveal style="--i:2">LINEでの簡単相談、またはWebフォームから1分で完了！</p>
-      <a class="btn btn-ochre btn-pill" href="https://line.me/R/ti/p/@your_line_id" target="_blank" rel="noopener" data-reveal style="--i:3">今すぐ公式LINEで相談する</a>
+      <p class="pulse-lead" data-reveal style="--i:2">新規会員登録フォームから1分で完了！ご登録いただいたLINE ID・お電話番号宛にご連絡します。</p>
+      <form class="reg-form" id="regForm" data-reveal style="--i:3" novalidate>
+        <div class="reg-row">
+          <label class="reg-label" for="regName">お名前</label>
+          <input class="reg-input" id="regName" name="name" type="text" required autocomplete="name" placeholder="例: 山田 太郎">
+        </div>
+        <div class="reg-row">
+          <label class="reg-label" for="regContact">LINE ID または LINEにご登録の電話番号</label>
+          <input class="reg-input" id="regContact" name="line_or_phone" type="text" required placeholder="例: @mitaka / 090-0000-0000">
+        </div>
+        <p class="reg-error" id="regError" hidden>未入力の項目があります。ご確認ください。</p>
+        <button class="btn btn-ochre btn-pill" type="submit">会員登録して相談を申し込む</button>
+        <p class="reg-done" id="regDone" hidden>受け付けました！ご連絡をお待ちください。</p>
+      </form>
     </div>
   </section>
 

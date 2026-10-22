@@ -782,6 +782,41 @@ section[id], header[id] { scroll-margin-top: 6.5rem; }
   font-size: 1.05rem;
 }
 
+/* --- Member registration form --- */
+.reg-form {
+  width: min(34rem, 100%);
+  display: grid;
+  gap: 1.1rem;
+  text-align: left;
+}
+.reg-row { display: grid; gap: 0.4rem; }
+.reg-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: rgba(242, 244, 243, 0.88);
+}
+.reg-input {
+  min-height: 56px;
+  padding: 0 1.1rem;
+  border: 1px solid rgba(242, 244, 243, 0.35);
+  border-radius: 999px;
+  background: rgba(242, 244, 243, 0.12);
+  color: var(--mist);
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.reg-input::placeholder { color: rgba(242, 244, 243, 0.45); }
+.reg-input:focus {
+  outline: none;
+  border-color: var(--ochre);
+  background: rgba(242, 244, 243, 0.18);
+}
+.reg-input.is-invalid { border-color: #f2b8b5; }
+.reg-error { font-size: 0.88rem; color: #f2b8b5; }
+.reg-done { font-size: 0.95rem; font-weight: 700; color: var(--mist); }
+
 /* ============================================================
    FOOTER
    ============================================================ */

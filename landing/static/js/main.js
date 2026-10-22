@@ -135,6 +135,46 @@
     reorderPlans('mobility');
   }
 
+  /* --- Member registration form (LINE ID / LINE phone number) --- */
+  var regForm = document.getElementById('regForm');
+  if (regForm) {
+    var regError = document.getElementById('regError');
+    var regDone = document.getElementById('regDone');
+    var regSubmit = regForm.querySelector('button[type="submit"]');
+    regForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var fields = Array.prototype.slice.call(regForm.querySelectorAll('.reg-input'));
+      var values = {};
+      var invalid = false;
+      fields.forEach(function (input) {
+        var v = input.value.trim();
+        values[input.name] = v;
+        var bad = v === '';
+        input.classList.toggle('is-invalid', bad);
+        if (bad) invalid = true;
+      });
+      regDone.hidden = true;
+      regError.hidden = !invalid;
+      if (invalid) return;
+
+      regSubmit.disabled = true;
+      fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values)
+      }).then(function (res) {
+        if (!res.ok) throw new Error('failed');
+        regForm.reset();
+        regDone.hidden = false;
+      }).catch(function () {
+        regError.textContent = '送信できませんでした。時間をおいて再度お試しください。';
+        regError.hidden = false;
+      }).then(function () {
+        regSubmit.disabled = false;
+      });
+    });
+  }
+
   /* --- Hero: gentle parallax on the image only --- */
   var heroImage = document.querySelector('.hero-media img');
   if (heroImage && !reduce) {
