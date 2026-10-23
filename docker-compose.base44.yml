@@ -1,0 +1,55 @@
+# Base44 development environment for the FastAPI repository.
+#
+# This repository is the FastAPI framework itself, so the runnable artifact is its
+# documentation site. The service runs Zensical's live server (the same one behind
+# `uv run ./scripts/docs.py live`) from the cloned source, with hot reload.
+#
+# The virtualenv lives in a named volume (/opt/venv) instead of the repo checkout so
+# `uv sync` never writes into the bind mount.
+
+name: fastapi
+
+services:
+  docs:
+    # Plain runtime base image; the app source is the bind-mounted checkout.
+    image: ghcr.io/astral-sh/uv:python3.11-bookworm-slim
+    working_dir: /app
+    labels:
+      base44.project: "FastAPI Docs"
+      base44.kind: web
+      base44.port: "3000"
+    command:
+      - sh
+      - -ec
+      - |
+        uv sync --locked --no-dev --group docs
+        cd docs/en
+        exec /opt/venv/bin/zensical serve \
+          --config-file mkdocs.yml \
+          --dev-addr 0.0.0.0:3000
+    environment:
+      - UV_PROJECT_ENVIRONMENT=/opt/venv
+      - UV_LINK_MODE=copy
+      - BASE44_PREVIEW_MODE
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/app
+      - docs-venv:/opt/venv
+      - uv-cache:/root/.cache/uv
+    healthcheck:
+      # Probes the docs server itself (renders the FastAPI index page).
+      test:
+        - CMD-SHELL
+        - >-
+          python -c "import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:3000/', timeout=5).read(1)"
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    restart: on-failure
+
+volumes:
+  docs-venv:
+  uv-cache:
