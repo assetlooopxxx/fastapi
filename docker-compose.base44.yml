@@ -1,0 +1,19 @@
+services:
+  web:
+    build: ./app
+    labels:
+      base44.project: レター作成・顧客管理
+      base44.kind: web
+      base44.port: "3000"
+    ports:
+      - "3000:8000"
+    volumes:
+      - ./app:/srv/app
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/srv/app"]
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s

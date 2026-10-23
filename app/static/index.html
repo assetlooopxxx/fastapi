@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>レター作成・顧客管理</title>
+<style>
+:root{--bg:#f3f5f7;--card:#fff;--ink:#1d2733;--sub:#5b6775;--line:#d5dbe2;--accent:#1f5e8c;--accent-ink:#fff;--paper:#fff;--danger:#b3261e;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181d;--card:#1d242c;--ink:#e8edf2;--sub:#9aa7b4;--line:#33404d;--accent:#6fb1e0;--accent-ink:#0e1a24;--paper:#f7f6f2;--danger:#f2b8b5}}
+:root[data-theme="dark"]{--bg:#14181d;--card:#1d242c;--ink:#e8edf2;--sub:#9aa7b4;--line:#33404d;--accent:#6fb1e0;--accent-ink:#0e1a24;--paper:#f7f6f2;--danger:#f2b8b5}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans JP","Hiragino Sans",system-ui,sans-serif;line-height:1.6}
+.wrap{max-width:1000px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:0 0 10px}
+nav{display:flex;gap:6px;margin-bottom:14px}
+nav button,.seg button{background:transparent;color:var(--accent)}
+nav button[aria-selected="true"],.seg button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.grid{display:grid;gap:16px}
+@media(min-width:800px){.grid{grid-template-columns:1fr 1fr;align-items:start}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+fieldset{border:0;padding:0;margin:0 0 14px}
+legend{font-weight:700;font-size:14px;margin-bottom:6px;padding:0}
+label{display:block;font-size:13px;color:var(--sub);margin-top:8px}
+input,textarea,select{width:100%;font:inherit;font-size:16px;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+select option{color:#1d2733}
+textarea{min-height:80px;resize:vertical}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.paper{background:var(--paper);color:#1d1d1d;border:1px solid var(--line);border-radius:4px;padding:22px 18px;font-family:Georgia,"Times New Roman","Noto Serif JP",serif;font-size:15px;line-height:1.7;white-space:pre-wrap;word-break:break-word;min-height:260px}
+.paper+.paper{margin-top:12px}
+.actions,.seg{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.seg{margin:0 0 12px}
+button{font:inherit;font-size:15px;padding:9px 14px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+button.ghost{background:transparent;color:var(--accent)}
+button.warn{background:transparent;color:var(--danger);border-color:var(--danger)}
+button.sm{font-size:13px;padding:5px 10px}
+#msg{font-size:13px;color:var(--sub);align-self:center}
+.cust{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:10px}
+.cust b{font-size:15px}
+.cust div{font-size:13px;color:var(--sub);overflow-wrap:anywhere}
+.cust .actions{margin-top:8px}
+.hidden{display:none}
+@media print{body{background:#fff}.wrap>h1,nav,.form,.seg,.actions{display:none}.card{border:0;padding:0}.paper{border:0}.grid{display:block}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>レター作成・顧客管理</h1>
+<nav role="tablist">
+<button role="tab" id="tab-letter" aria-selected="true">レター作成</button>
+<button role="tab" id="tab-cust" aria-selected="false">顧客管理</button>
+</nav>
+
+<div id="page-letter" class="grid">
+<section class="card form">
+<fieldset><legend>テンプレート</legend>
+<select id="tpl" aria-label="テンプレート"></select>
+</fieldset>
+<fieldset><legend>宛先(顧客から選択)</legend>
+<select id="pick" aria-label="顧客を選択"></select>
+<label for="rn">氏名</label><input id="rn">
+<label for="rt">役職</label><input id="rt">
+<label for="rc">会社名</label><input id="rc">
+<label for="ra">住所(番地)</label><input id="ra">
+<label for="rcs">市・州・郵便番号</label><input id="rcs">
+</fieldset>
+<fieldset><legend>差出人</legend>
+<label for="yn">氏名</label><input id="yn" autocomplete="name">
+<label for="yt">役職</label><input id="yt">
+<label for="yc">会社名</label><input id="yc" autocomplete="organization">
+<div class="row">
+<div><label for="yp">電話番号</label><input id="yp" type="tel"></div>
+<div><label for="ye">メール</label><input id="ye" type="email"></div>
+</div>
+</fieldset>
+<fieldset><legend>本文</legend>
+<label for="dt">日付(空欄で今日)</label><input id="dt">
+<label for="topic" id="topicL"></label><input id="topic">
+<label for="req" id="reqL"></label><textarea id="req"></textarea>
+</fieldset>
+</section>
+<section class="card">
+<div class="seg" role="tablist">
+<button data-v="en" aria-selected="true">英語</button>
+<button data-v="ja" aria-selected="false">日本語訳</button>
+<button data-v="both" aria-selected="false">両方</button>
+</div>
+<div class="paper" id="outEn"></div>
+<div class="paper hidden" id="outJa"></div>
+<div class="actions">
+<button id="copy">コピー</button>
+<button class="ghost" id="print">印刷 / PDF</button>
+<button class="ghost" id="reset">本文クリア</button>
+<span id="msg" role="status"></span>
+</div>
+</section>
+</div>
+
+<div id="page-cust" class="hidden">
+<div class="grid">
+<section class="card">
+<fieldset><legend id="cformT">顧客を追加</legend>
+<label for="cn">氏名</label><input id="cn">
+<label for="ct">役職</label><input id="ct">
+<label for="cc">会社名</label><input id="cc">
+<label for="ca">住所(番地)</label><input id="ca">
+<label for="ccs">市・州・郵便番号</label><input id="ccs">
+<label for="ce">メール</label><input id="ce" type="email">
+<label for="cm">メモ</label><textarea id="cm"></textarea>
+</fieldset>
+<div class="actions" style="margin-top:0">
+<button id="csave">保存</button>
+<button class="ghost" id="ccancel">クリア</button>
+</div>
+</section>
+<section class="card">
+<label for="cq" style="margin-top:0">検索</label><input id="cq" placeholder="氏名・会社名">
+<div id="clist"></div>
+</section>
+</div>
+</div>
+</div>
+
+<script>
+var $=function(i){return document.getElementById(i)};
+var F=["yn","yt","yc","yp","ye","rn","rt","rc","ra","rcs","dt","topic","req"];
+var CF=["cn","ct","cc","ca","ccs","ce","cm"];
+var K="letter-app-v2",CK="letter-customers-v1";
+var customers=[],editId=null,view="en";
+
+var T=[
+{n:"問い合わせ",tl:"問い合わせ内容(例: your services)",rl:"知りたいこと(例: learning more about your product offerings and pricing options)",tp:"Subject/Topic",rp:"key requirement or offer",
+en:function(t,r,y){return "I am writing to inquire about "+t+". As "+y+" continues to expand, we are looking for reliable partners who can deliver high-quality solutions.\n\nWe have reviewed your recent work and believe that a partnership could bring mutual benefits. Specifically, we are interested in "+r+".\n\nCould you please provide further details or let us know if you are available for a short call next week? Thank you for your time and consideration, and I look forward to hearing from you."},
+ja:function(t,r,y){return t+"についてお問い合わせしたく、ご連絡いたしました。"+y+"は事業を拡大しており、高品質なソリューションを提供してくださる信頼できるパートナーを探しております。\n\n貴社の最近のお取り組みを拝見し、提携が双方に利益をもたらすと考えております。具体的には、"+r+"について詳しく伺いたく存じます。\n\n詳細をご教示いただくか、来週に短いお電話のお時間をいただけませんでしょうか。ご検討のほど、よろしくお願い申し上げます。"}},
+{n:"見積依頼",tl:"品目・サービス(例: 10 used vehicles)",rl:"数量・条件(例: 10 units, delivery to Mombasa by March)",tp:"Item/Service",rp:"quantity and conditions",
+en:function(t,r,y){return "I am writing on behalf of "+y+" to request a quotation for "+t+".\n\nOur requirements are as follows: "+r+".\n\nCould you please send us a detailed quote, including pricing, lead time, and payment terms? If you need any further information, please do not hesitate to contact me."},
+ja:function(t,r,y){return y+"を代表し、"+t+"のお見積りをお願いしたくご連絡いたしました。\n\n要件は次のとおりです。"+r+"。\n\n価格、納期、お支払条件を含む詳細なお見積書をお送りいただけますでしょうか。ご不明な点がございましたら、お気軽にご連絡ください。"}},
+{n:"フォローアップ",tl:"前回の件(例: our meeting on October 15)",rl:"次のステップ(例: a short call next week to discuss next steps)",tp:"Previous topic",rp:"next step",
+en:function(t,r,y){return "I am following up on "+t+". Thank you again for your time.\n\nAs a next step, we would like to propose "+r+".\n\nPlease let me know what works best for you. I look forward to your reply."},
+ja:function(t,r,y){return t+"の件につきまして、改めてご連絡いたします。お時間をいただき、誠にありがとうございました。\n\n次のステップとして、"+r+"をご提案いたします。\n\nご都合のよい日時をお知らせください。ご返信をお待ちしております。"}},
+{n:"お礼",tl:"お礼の内容(例: your hospitality during our visit)",rl:"今後について(例: We hope to work together soon.)",tp:"Reason for thanks",rp:"closing message",
+en:function(t,r,y){return "Thank you very much for "+t+". All of us at "+y+" truly appreciate your time and support.\n\n"+r+"\n\nWe look forward to continuing our relationship."},
+ja:function(t,r,y){return t+"につきまして、誠にありがとうございました。"+y+"一同、心より感謝申し上げます。\n\n"+r+"\n\n今後ともどうぞよろしくお願い申し上げます。"}}
+];
+
+function today(){return new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}
+function g(id,ph){var s=$(id).value.trim();return s||"["+ph+"]"}
+function head(){
+var d=$("dt").value.trim()||today();
+return {y:[g("yn","Your Name"),g("yt","Your Title"),g("yc","Your Company Name"),g("yp","Your Phone Number")+" | "+g("ye","Your Email Address")],
+d:d,r:[g("rt","Recipient Title"),g("rc","Recipient Company Name"),g("ra","Recipient Street Address"),g("rcs","City, State, Zip Code")]};
+}
+function build(lang){
+var t=T[$("tpl").value],h=head(),rn=g("rn","Recipient Name"),yn=g("yn","Your Name"),yt=g("yt","Your Title"),yc=g("yc","Your Company Name");
+var body=t[lang](g("topic",t.tp),g("req",t.rp),yc);
+var out=h.y.join("\n")+"\n\n"+h.d+"\n\n"+rn+"\n"+h.r.join("\n")+"\n\n";
+if(lang==="en")out+="Dear "+rn+",\n\n"+body+"\n\nSincerely,\n\n"+yn+"\n"+yt;
+else out+=rn+" 様\n\n"+body+"\n\n敬具\n\n"+yn+"\n"+yt;
+return out;
+}
+function render(){
+$("outEn").textContent=build("en");$("outJa").textContent=build("ja");
+$("outEn").classList.toggle("hidden",view==="ja");$("outJa").classList.toggle("hidden",view==="en");
+var t=T[$("tpl").value];$("topicL").textContent=t.tl;$("reqL").textContent=t.rl;
+save();
+}
+function save(){try{var o={tpl:$("tpl").value};F.forEach(function(i){o[i]=$(i).value});localStorage.setItem(K,JSON.stringify(o))}catch(e){}}
+function load(){try{var o=JSON.parse(localStorage.getItem(K)||"{}");if(o.tpl)$("tpl").value=o.tpl;F.forEach(function(i){if(o[i])$(i).value=o[i]})}catch(e){}
+try{customers=JSON.parse(localStorage.getItem(CK)||"[]")}catch(e){customers=[]}}
+function saveC(){try{localStorage.setItem(CK,JSON.stringify(customers))}catch(e){}}
+function say(t){$("msg").textContent=t;setTimeout(function(){$("msg").textContent=""},2000)}
+
+function fillPick(){
+var p=$("pick");p.textContent="";
+var o=document.createElement("option");o.value="";o.textContent=customers.length?"顧客を選択…":"顧客が未登録です";p.appendChild(o);
+customers.forEach(function(c){var x=document.createElement("option");x.value=c.id;x.textContent=(c.company?c.company+" / ":"")+c.cn;p.appendChild(x)});
+}
+function useCustomer(c){
+$("rn").value=c.cn||"";$("rt").value=c.ct||"";$("rc").value=c.cc||"";$("ra").value=c.ca||"";$("rcs").value=c.ccs||"";render();
+}
+function renderList(){
+var q=$("cq").value.trim().toLowerCase(),l=$("clist");l.textContent="";
+var items=customers.filter(function(c){return !q||((c.cn||"")+(c.cc||"")).toLowerCase().indexOf(q)>-1});
+if(!items.length){var e=document.createElement("div");e.style.marginTop="10px";e.textContent=customers.length?"該当する顧客がいません。":"左のフォームから最初の顧客を追加してください。";l.appendChild(e);return}
+items.forEach(function(c){
+var d=document.createElement("div");d.className="cust";
+var b=document.createElement("b");b.textContent=c.cn+(c.ct?"("+c.ct+")":"");d.appendChild(b);
+[c.cc,[c.ca,c.ccs].filter(Boolean).join(", "),c.ce,c.cm].forEach(function(s){if(s){var x=document.createElement("div");x.textContent=s;d.appendChild(x)}});
+var a=document.createElement("div");a.className="actions";
+function mk(txt,cls,fn){var k=document.createElement("button");k.textContent=txt;k.className="sm "+cls;k.onclick=fn;a.appendChild(k)}
+mk("レター作成","",function(){useCustomer(c);$("pick").value=c.id;show("letter")});
+mk("編集","ghost",function(){editId=c.id;CF.forEach(function(i){$(i).value=c[i]||""});$("cformT").textContent="顧客を編集";window.scrollTo(0,0)});
+mk("削除","warn",function(){if(confirm(c.cn+" を削除しますか?")){customers=customers.filter(function(x){return x.id!==c.id});saveC();fillPick();renderList()}});
+d.appendChild(a);l.appendChild(d);
+});
+}
+function clearC(){CF.forEach(function(i){$(i).value=""});editId=null;$("cformT").textContent="顧客を追加"}
+function show(p){
+$("page-letter").classList.toggle("hidden",p!=="letter");$("page-cust").classList.toggle("hidden",p!=="cust");
+$("tab-letter").setAttribute("aria-selected",p==="letter");$("tab-cust").setAttribute("aria-selected",p==="cust");
+}
+
+T.forEach(function(t,i){var o=document.createElement("option");o.value=i;o.textContent=t.n;$("tpl").appendChild(o)});
+load();fillPick();renderList();render();
+F.forEach(function(i){$(i).addEventListener("input",render)});
+$("tpl").onchange=render;
+$("pick").onchange=function(){var c=customers.filter(function(x){return x.id===$("pick").value})[0];if(c)useCustomer(c)};
+$("tab-letter").onclick=function(){show("letter")};$("tab-cust").onclick=function(){show("cust")};
+document.querySelectorAll(".seg button").forEach(function(b){b.onclick=function(){view=b.dataset.v;document.querySelectorAll(".seg button").forEach(function(x){x.setAttribute("aria-selected",x===b)});render()}});
+$("csave").onclick=function(){
+var c={};CF.forEach(function(i){c[i]=$(i).value.trim()});
+if(!c.cn){alert("氏名を入力してください");return}
+if(editId){customers=customers.map(function(x){if(x.id===editId){c.id=editId;return c}return x})}
+else{c.id="c"+Date.now();customers.push(c)}
+saveC();fillPick();renderList();clearC();
+};
+$("ccancel").onclick=clearC;$("cq").oninput=renderList;
+$("copy").onclick=function(){
+var t=view==="en"?build("en"):view==="ja"?build("ja"):build("en")+"\n\n----------\n\n"+build("ja");
+function fb(){var a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy");say("コピーしました")}catch(e){say("コピーできませんでした")}a.remove()}
+if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){say("コピーしました")},fb)}else fb();
+};
+$("print").onclick=function(){window.print()};
+$("reset").onclick=function(){["dt","topic","req"].forEach(function(i){$(i).value=""});render()};
+</script>
+</body>
+</html>
