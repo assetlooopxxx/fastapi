@@ -20,11 +20,13 @@ docker compose -f docker-compose.base44.yml up -d
 
   ```bash
   uv sync --locked --no-dev --group docs
-  cd docs/en && zensical serve --config-file mkdocs.yml --dev-addr 0.0.0.0:3000
+  cd docs/en && zensical serve --config-file mkdocs.yml --dev-addr 0.0.0.0:8000
   ```
 
   This is the same live server as `uv run ./scripts/docs.py live` (which binds
-  `127.0.0.1:8008` instead).
+  `127.0.0.1:8008` instead). It listens on 8000 inside the compose network only.
+- Service `web` (`nginx:alpine`, config in `.base44/nginx.conf`) is the public
+  entry point on host port 3000 and proxies to `docs:8000`.
 - The virtualenv lives in the named volume `docs-venv` (`UV_PROJECT_ENVIRONMENT=/opt/venv`)
   so `uv sync` never writes `.venv/` into the repo checkout. The `uv-cache`
   volume keeps downloads between container recreations.
@@ -45,6 +47,16 @@ docker compose -f docker-compose.base44.yml up -d
   plus that group — not just the runtime dependencies.
 - Translated languages are staged and built by `scripts/docs.py build-lang <lang>`
   from a copy in `site_zensical_src/`; only English is served live here.
+- **Why the nginx service exists:** `zensical serve` appends a live-reload client
+  to every HTML response that connects to a hardcoded `ws://` URL. The preview is
+  served over HTTPS, so browsers block that socket (Mixed Content /
+  `SecurityError: Failed to construct 'WebSocket'`). `.base44/nginx.conf` rewrites
+  just that injected URL to `wss://` and proxies the upgraded connection back to
+  `docs:8000`, so live reload works over the preview's TLS termination. The
+  rewrite targets the injected `new WebSocket(\`ws://…` call only — `ws://` URLs
+  shown inside documentation samples are left alone. If a future zensical version
+  changes that injected snippet, the rewrite stops matching and the Mixed Content
+  error returns; the fix is to update the `sub_filter` pattern.
 
 ## How to verify
 
@@ -56,8 +68,8 @@ docker compose -f docker-compose.base44.yml ps                             # sta
 ```
 
 Hot reload: editing a file under `docs/en/docs/` rebuilds the served page within
-a few seconds (verified through the bind mount), so no rebuild or restart is
-needed after documentation edits. Restart the service
+a few seconds (verified through the bind mount and through the proxy), so no
+rebuild or restart is needed after documentation edits. Restart the service
 (`docker compose -f docker-compose.base44.yml restart docs`) after changing
 dependencies or files outside the watched docs directory.
 

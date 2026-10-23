@@ -1,8 +1,9 @@
 # Base44 development environment for the FastAPI repository.
 #
 # This repository is the FastAPI framework itself, so the runnable artifact is its
-# documentation site. The service runs Zensical's live server (the same one behind
-# `uv run ./scripts/docs.py live`) from the cloned source, with hot reload.
+# documentation site. `docs` runs Zensical's live server (the same one behind
+# `uv run ./scripts/docs.py live`) from the cloned source, and `web` fronts it on
+# port 3000 — see .base44/nginx.conf for why the preview needs a proxy.
 #
 # The virtualenv lives in a named volume (/opt/venv) instead of the repo checkout so
 # `uv sync` never writes into the bind mount.
@@ -15,9 +16,8 @@ services:
     image: ghcr.io/astral-sh/uv:python3.11-bookworm-slim
     working_dir: /app
     labels:
-      base44.project: "FastAPI Docs"
-      base44.kind: web
-      base44.port: "3000"
+      base44.project: "FastAPI Docs server"
+      base44.kind: infra
     command:
       - sh
       - -ec
@@ -26,13 +26,13 @@ services:
         cd docs/en
         exec /opt/venv/bin/zensical serve \
           --config-file mkdocs.yml \
-          --dev-addr 0.0.0.0:3000
+          --dev-addr 0.0.0.0:8000
     environment:
       - UV_PROJECT_ENVIRONMENT=/opt/venv
       - UV_LINK_MODE=copy
       - BASE44_PREVIEW_MODE
-    ports:
-      - "3000:3000"
+    expose:
+      - "8000"
     volumes:
       - ./:/app
       - docs-venv:/opt/venv
@@ -43,11 +43,32 @@ services:
         - CMD-SHELL
         - >-
           python -c "import urllib.request;
-          urllib.request.urlopen('http://127.0.0.1:3000/', timeout=5).read(1)"
+          urllib.request.urlopen('http://127.0.0.1:8000/', timeout=5).read(1)"
       interval: 15s
       timeout: 10s
       retries: 5
       start_period: 120s
+    restart: on-failure
+
+  web:
+    image: nginx:alpine
+    labels:
+      base44.project: "FastAPI Docs"
+      base44.kind: web
+      base44.port: "3000"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./.base44/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      docs:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/ || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
     restart: on-failure
 
 volumes:
